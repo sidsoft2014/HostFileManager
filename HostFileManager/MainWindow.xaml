@@ -1,0 +1,53 @@
+﻿<Window x:Class="HostFileManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HostFileManager"
+        mc:Ignorable="d"
+        Title="Host file manager" Height="450" Width="800">
+
+    <Grid x:Name="Wrapper">
+        <Grid.DataContext>
+            <local:MainWindowViewModel x:Name="vm"/>
+        </Grid.DataContext>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="28"/>
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0">
+            <TextBlock Text="Host File Manager" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="26"/>
+        </DockPanel>
+        <DockPanel Grid.Row="1">
+            <DockPanel DockPanel.Dock="Left">
+                <Button DockPanel.Dock="Top" Content="Add Entry" x:Name="btnAddEntry" Click="BtnAddEntry_Click"/>
+                <Button DockPanel.Dock="Bottom" Content="Write" x:Name="btnWrite" Click="BtnWrite_Click"/>
+                <DataGrid DockPanel.Dock="Top" ItemsSource="{Binding HostFileEntries}" IsReadOnly="True" SelectionMode="Single" SelectedItem="{Binding SelectedHostFileEntry, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}"/>
+                        <DataGridTextColumn Header="IP Address" Binding="{Binding IPAddress}"/>
+                        <DataGridTextColumn Header="Domain" Binding="{Binding Domain}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+            <GroupBox DockPanel.Dock="Left" Header="Details">
+                <StackPanel>
+                    <TextBlock Text="Is Active"/>
+                    <CheckBox IsChecked="{Binding SelectedHostFileEntry.IsActive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="IP Address"/>
+                    <TextBox Text="{Binding SelectedHostFileEntry.IPString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
+
+                    <TextBlock Text="Domain"/>
+                    <TextBox Text="{Binding SelectedHostFileEntry.Domain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Button Content="Delete" x:Name="btnRemEntry" Click="BtnRemEntry_Click" Width="200" Margin="20"/>
+                </StackPanel>
+            </GroupBox>
+        </DockPanel>
+        <DockPanel Grid.Row="2">
+            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="{Binding StatusMessage}" />
+        </DockPanel>
+    </Grid>
+</Window>
