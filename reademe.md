@@ -1,1 +1,0 @@
-This is a small application to manage the windows hosts file entries.
