@@ -6,11 +6,21 @@ namespace hfm
 {
     class Program
     {
+        private enum ProcessNextStep
+        {
+            ShowList,
+            ShowPrompt,
+            Exit
+        }
+
         private static IHostFileService service = new HostFileService();
         private static bool runAsCmd = false; // Prevent trying to launch GUI once in console mode.
+
         static void Main(string[] args)
         {
+            ProcessNextStep nextStep = ProcessNextStep.ShowList;
         StartPoint:
+
             if ((args == null || args.Length == 0) && !runAsCmd)
             {
                 // TODO: Launch GUI
@@ -18,53 +28,25 @@ namespace hfm
             else
             {
                 runAsCmd = true;
-                string cmd = null;
-
-                try
-                {
-                    cmd = args?[0]?.ToLower();
-                }
-                catch
-                {
-                    // Make sure not to get index out of range or null ref exception when getting cmd
-                }
-
-                switch (cmd)
-                {
-                    case "a":
-                    case "add":
-                        Add(args);
-                        break;
-                    case "d":
-                    case "del":
-                    case "delete":
-                    case "r":
-                    case "rem":
-                    case "remove":
-                        Del(args);
-                        break;
-                    case "t":
-                    case "tg":
-                    case "toggle":
-                    case "s":
-                    case "sw":
-                    case "switch":
-                        Toggle(args);
-                        break;
-                    case "g":
-                    case "get":
-                        Console.Clear();
-                        Get(args);
-                        Console.WriteLine(Environment.NewLine);
-                        Console.WriteLine("Please type next action");
-                        args = Console.ReadLine().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                        goto StartPoint;
-                    case "exit":
-                    case "quit":
-                    default:
-                        return;
-                }
+                nextStep = ProcessInput(args);
             }
+
+            switch (nextStep)
+            {
+                case ProcessNextStep.ShowPrompt:
+                default:
+                    Console.WriteLine(Environment.NewLine);
+                    break;
+                case ProcessNextStep.ShowList:
+                    Get(args);
+                    break;
+                case ProcessNextStep.Exit:
+                    return;
+            }
+
+            Console.WriteLine("Please type next action");
+            args = Console.ReadLine().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            goto StartPoint;
 
             // TODO: Fix for if launched as an actual console.
             var promptMessage = runAsCmd ? "Press 'Esc' key to quit or any other key to continue" : $"Welcome to Host File Manager.{Environment.NewLine}Press 'Esc' key to quit or any other key to continue";
@@ -75,8 +57,66 @@ namespace hfm
                 Console.Clear();
                 Console.WriteLine("Please type next action");
                 args = Console.ReadLine().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                goto StartPoint;
             }
+        }
+
+        private static ProcessNextStep ProcessInput(string[] args)
+        {
+            string cmd = null;
+
+            try
+            {
+                cmd = args?[0]?.ToLower();
+            }
+            catch
+            {
+                // Make sure not to get killed by an index out of range or null ref exception when getting cmd
+            }
+
+            switch (cmd)
+            {
+                case "a":
+                case "add":
+                    Add(args);
+                    return ProcessNextStep.ShowList;
+                case "d":
+                case "del":
+                case "delete":
+                case "r":
+                case "rem":
+                case "remove":
+                    Del(args);
+                    return ProcessNextStep.ShowList;
+                case "t":
+                case "tg":
+                case "toggle":
+                case "s":
+                case "sw":
+                case "switch":
+                    Toggle(args);
+                    return ProcessNextStep.ShowList;
+                case "g":
+                case "get":
+                default:
+                    Console.Clear();
+                    Get(args);
+                    return ProcessNextStep.ShowPrompt;
+                case "exit":
+                case "quit":
+                    return ProcessNextStep.Exit;
+            }
+        }
+
+        private static void Get(string[] args)
+        {
+            Console.WriteLine($"Trying to read host file");
+            Console.WriteLine(Environment.NewLine);
+            foreach (var item in service.GetHostFileEntries())
+            {
+                string active = item.IsActive ? "" : "#\t";
+                Console.WriteLine($"{active}{item.IPString}\t{item.Domain}");
+            }
+            Console.WriteLine(Environment.NewLine);
         }
 
         private static void Add(string[] args)
@@ -156,6 +196,7 @@ namespace hfm
             }
 
             entry.IsActive = activate;
+            Console.WriteLine(Environment.NewLine);
             Console.WriteLine($"Trying to add {entry.Domain} with IP {entry.IPAddress}");
             var result = service.AddSingleAndWrite(entry);
             PrintResult(result, msg);
@@ -185,19 +226,10 @@ namespace hfm
                 entry.Domain = domain;
             }
 
+            Console.WriteLine(Environment.NewLine);
             Console.WriteLine($"Trying to remove {entry.Domain} with IP {entry.IPAddress}");
             var result = service.RemoveSingleEntry(entry);
             PrintResult(result, msg);
-        }
-
-        private static void Get(string[] args)
-        {
-            Console.WriteLine($"Trying to read host file");
-            foreach (var item in service.GetHostFileEntries())
-            {
-                string active = item.IsActive ? "" : "#\t";
-                Console.WriteLine($"{active}{item.IPString}\t{item.Domain}");
-            }
         }
 
         private static void Toggle(string[] args)
@@ -225,6 +257,7 @@ namespace hfm
             }
 
             string active = entry.IsActive ? "active" : "inactive";
+            Console.WriteLine(Environment.NewLine);
             Console.WriteLine($"Trying to toggle {entry.Domain} with IP {entry.IPAddress} to be {active}");
             var result = service.ToggleSingleEntry(entry);
             PrintResult(result, msg);

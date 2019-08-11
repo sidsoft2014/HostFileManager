@@ -95,7 +95,16 @@ namespace hfm.core
                 if(entry.IPString == "127.0.0.1")
                 {
                     Console.WriteLine($"Could not find entry with IP: 127.0.0.1. Looking for single match on domain: {entry.Domain}");
-                    var otherTry = entries.FirstOrDefault(p => p.Domain == entry.Domain);
+                    HostFileEntry otherTry = null;
+                    try
+                    {
+                        otherTry = entries.SingleOrDefault(p => p.Domain == entry.Domain);
+                    }
+                    catch
+                    {
+
+                    }
+
                     if(otherTry != null)
                     {
                         Console.WriteLine($"Found single match for domain: {entry.Domain}.{Environment.NewLine}Will remove this.{Environment.NewLine}Hope that is what you wanted. :P");
