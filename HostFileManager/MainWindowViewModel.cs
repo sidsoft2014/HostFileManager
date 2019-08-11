@@ -1,4 +1,5 @@
-﻿using System;
+﻿using hfm.core;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace HostFileManager
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        private HostFileService _fileService = new HostFileService();
+        private IHostFileService _fileService = new HostFileService();
         private HostFileEntry selectedHostFileEntry;
         private string _statusMessage;
         private ICommand _delete;

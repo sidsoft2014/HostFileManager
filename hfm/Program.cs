@@ -1,0 +1,246 @@
+﻿using hfm.core;
+using System;
+using System.Net;
+
+namespace hfm
+{
+    class Program
+    {
+        private static IHostFileService service = new HostFileService();
+        private static bool runAsCmd = false; // Prevent trying to launch GUI once in console mode.
+        static void Main(string[] args)
+        {
+        StartPoint:
+            if ((args == null || args.Length == 0) && !runAsCmd)
+            {
+                // TODO: Launch GUI
+            }
+            else
+            {
+                runAsCmd = true;
+                string cmd = null;
+
+                try
+                {
+                    cmd = args?[0]?.ToLower();
+                }
+                catch
+                {
+                    // Make sure not to get index out of range or null ref exception when getting cmd
+                }
+
+                switch (cmd)
+                {
+                    case "a":
+                    case "add":
+                        Add(args);
+                        break;
+                    case "d":
+                    case "del":
+                    case "delete":
+                    case "r":
+                    case "rem":
+                    case "remove":
+                        Del(args);
+                        break;
+                    case "t":
+                    case "tg":
+                    case "toggle":
+                    case "s":
+                    case "sw":
+                    case "switch":
+                        Toggle(args);
+                        break;
+                    case "g":
+                    case "get":
+                        Console.Clear();
+                        Get(args);
+                        Console.WriteLine(Environment.NewLine);
+                        Console.WriteLine("Please type next action");
+                        args = Console.ReadLine().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                        goto StartPoint;
+                    case "exit":
+                    case "quit":
+                    default:
+                        return;
+                }
+            }
+
+            // TODO: Fix for if launched as an actual console.
+            var promptMessage = runAsCmd ? "Press 'Esc' key to quit or any other key to continue" : $"Welcome to Host File Manager.{Environment.NewLine}Press 'Esc' key to quit or any other key to continue";
+            Console.WriteLine(promptMessage);
+            var key = Console.ReadKey();
+            if (key.Key != ConsoleKey.Escape)
+            {
+                Console.Clear();
+                Console.WriteLine("Please type next action");
+                args = Console.ReadLine().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                goto StartPoint;
+            }
+        }
+
+        private static void Add(string[] args)
+        {
+            var msg = "";
+            // We should have just been passed a domain
+            var entry = new HostFileEntry();
+            IPAddress ip;
+            bool activate = true;
+
+            if (args.Length == 2)
+            {
+                if (IPAddress.TryParse(args[1], out ip))
+                {
+                    msg = "Cannot create an entry from just an IP";
+                }
+                else
+                {
+                    var domain = args[1].Trim();
+                    entry.Domain = domain;
+                }
+            }
+            else // Lets have fun working out what order the args were submitted in
+            {
+                if (IPAddress.TryParse(args[1], out ip))
+                {
+                    // If 3 elements we should have just IPAdress and Domain args
+                    if (args.Length == 3)
+                    {
+                        entry.Domain = args[2];
+                    }
+                    // If 4 elements we should have IPAdress, Domain and IsActive
+                    else if (args.Length == 4)
+                    {
+                        if (bool.TryParse(args[3], out activate))
+                        {
+                            entry.Domain = args[2];
+                        }
+                        else if (bool.TryParse(args[2], out activate))
+                        {
+                            entry.Domain = args[3];
+                        }
+                    }
+                }
+                else if (IPAddress.TryParse(args[2], out ip))
+                {
+                    // If 3 elements we should have just IPAdress and Domain args
+                    if (args.Length == 3)
+                    {
+                        entry.Domain = args[1];
+                    }
+                    // If 4 elements we should have IPAdress, Domain and IsActive
+                    else if (args.Length == 4)
+                    {
+                        if (bool.TryParse(args[3], out activate))
+                        {
+                            entry.Domain = args[1];
+                        }
+                        else if (bool.TryParse(args[1], out activate))
+                        {
+                            entry.Domain = args[3];
+                        }
+                    }
+                }
+                else if (IPAddress.TryParse(args[3], out ip))
+                {
+                    if (bool.TryParse(args[3], out activate))
+                    {
+                        entry.Domain = args[1];
+                    }
+                    else if (bool.TryParse(args[1], out activate))
+                    {
+                        entry.Domain = args[3];
+                    }
+                }
+                entry.IPAddress = ip;
+            }
+
+            entry.IsActive = activate;
+            Console.WriteLine($"Trying to add {entry.Domain} with IP {entry.IPAddress}");
+            var result = service.AddSingleAndWrite(entry);
+            PrintResult(result, msg);
+        }
+
+        private static void Del(string[] args)
+        {
+            string msg = "";
+            var entry = new HostFileEntry();
+            if (args.Length == 2)
+            {
+                entry.Domain = args[1];
+            }
+            else if (args.Length == 3)
+            {
+                IPAddress ip;
+                string domain = "";
+                if (IPAddress.TryParse(args[1], out ip))
+                {
+                    domain = args[2];
+                }
+                else if (IPAddress.TryParse(args[2], out ip))
+                {
+                    domain = args[1];
+                }
+                entry.IPAddress = ip;
+                entry.Domain = domain;
+            }
+
+            Console.WriteLine($"Trying to remove {entry.Domain} with IP {entry.IPAddress}");
+            var result = service.RemoveSingleEntry(entry);
+            PrintResult(result, msg);
+        }
+
+        private static void Get(string[] args)
+        {
+            Console.WriteLine($"Trying to read host file");
+            foreach (var item in service.GetHostFileEntries())
+            {
+                string active = item.IsActive ? "" : "#\t";
+                Console.WriteLine($"{active}{item.IPString}\t{item.Domain}");
+            }
+        }
+
+        private static void Toggle(string[] args)
+        {
+            string msg = "";
+            var entry = new HostFileEntry();
+            if (args.Length == 2)
+            {
+                entry.Domain = args[1];
+            }
+            else if (args.Length == 3)
+            {
+                IPAddress ip;
+                string domain = "";
+                if (IPAddress.TryParse(args[1], out ip))
+                {
+                    domain = args[2];
+                }
+                else if (IPAddress.TryParse(args[2], out ip))
+                {
+                    domain = args[1];
+                }
+                entry.IPAddress = ip;
+                entry.Domain = domain;
+            }
+
+            string active = entry.IsActive ? "active" : "inactive";
+            Console.WriteLine($"Trying to toggle {entry.Domain} with IP {entry.IPAddress} to be {active}");
+            var result = service.ToggleSingleEntry(entry);
+            PrintResult(result, msg);
+        }
+
+        private static void PrintResult(ResultMessage result, string msg)
+        {
+            Console.WriteLine(Environment.NewLine);
+            if (string.IsNullOrWhiteSpace(msg))
+            {
+                var successMsg = result.Success ? "Sucess - yay! :)" : "Failed - boo! :(";
+                Console.WriteLine(successMsg);
+                msg = result.Message;
+            }
+            Console.WriteLine(msg);
+            Console.WriteLine(Environment.NewLine);
+        }
+    }
+}

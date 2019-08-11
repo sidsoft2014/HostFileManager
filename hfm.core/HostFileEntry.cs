@@ -2,18 +2,27 @@
 using System.ComponentModel;
 using System.Net;
 
-namespace HostFileManager
+namespace hfm.core
 {
     public class HostFileEntry : INotifyPropertyChanged, IEquatable<HostFileEntry>
     {
-        private IPAddress iPAddress;
-        private string domain;
-        private bool isActive;
+        private IPAddress _iPAddress;
+        private string _domain;
+        private bool _isActive;
 
+        public HostFileEntry()
+        {
+            IPAddress = new IPAddress(16777343);
+        }
+        public HostFileEntry(string domain)
+            : this()
+        {
+            Domain = domain;
+        }
         public HostFileEntry(IPAddress ip, string domain)
+            : this(domain)
         {
             IPAddress = ip;
-            Domain = domain;
         }
         public HostFileEntry(IPAddress ip, string domain, bool isActive)
             : this(ip, domain)
@@ -25,36 +34,37 @@ namespace HostFileManager
 
         public IPAddress IPAddress
         {
-            get => iPAddress;
-            private set
+            get => _iPAddress;
+            set
             {
-                if (iPAddress != value)
+                if (_iPAddress != value)
                 {
-                    iPAddress = value;
+                    _iPAddress = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IPAddress)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IPString)));
                 }
             }
         }
         public string Domain
         {
-            get => domain;
+            get => _domain;
             set
             {
-                if (domain != value)
+                if (_domain != value)
                 {
-                    domain = value;
+                    _domain = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Domain)));
                 }
             }
         }
         public bool IsActive
         {
-            get => isActive;
+            get => _isActive;
             set
             {
-                if (isActive != value)
+                if (_isActive != value)
                 {
-                    isActive = value;
+                    _isActive = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsActive)));
                 }
             }
@@ -67,7 +77,7 @@ namespace HostFileManager
             {
                 if (IPAddress.TryParse(value, out IPAddress ip))
                 {
-                    IPAddress = ip;
+                    _iPAddress = ip; // Change background field to avoid double triggers
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IPAddress)));
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IPString)));
                 }
@@ -93,7 +103,21 @@ namespace HostFileManager
 
         public override int GetHashCode()
         {
-            return IPString.GetHashCode() ^ Domain.GetHashCode();
+            try
+            {
+                return IPString.GetHashCode() ^ Domain.GetHashCode();
+            }
+            catch
+            {
+                try
+                {
+                    return Domain.GetHashCode();
+                }
+                catch
+                {
+                    return IPString.GetHashCode();
+                }
+            }
         }
     }
 }
