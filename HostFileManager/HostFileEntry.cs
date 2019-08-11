@@ -1,9 +1,10 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Net;
 
 namespace HostFileManager
 {
-    public class HostFileEntry : INotifyPropertyChanged
+    public class HostFileEntry : INotifyPropertyChanged, IEquatable<HostFileEntry>
     {
         private IPAddress iPAddress;
         private string domain;
@@ -71,6 +72,28 @@ namespace HostFileManager
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IPString)));
                 }
             }
+        }
+
+        public bool Equals(HostFileEntry other)
+        {
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+
+            return GetHashCode() == other.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is HostFileEntry other)
+                return Equals(other);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return IPString.GetHashCode() ^ Domain.GetHashCode();
         }
     }
 }

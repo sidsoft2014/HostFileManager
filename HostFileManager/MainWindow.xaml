@@ -23,28 +23,21 @@
             <DockPanel DockPanel.Dock="Left">
                 <Button DockPanel.Dock="Top" Content="Add Entry" x:Name="btnAddEntry" Click="BtnAddEntry_Click"/>
                 <Button DockPanel.Dock="Bottom" Content="Write" x:Name="btnWrite" Click="BtnWrite_Click"/>
-                <DataGrid DockPanel.Dock="Top" ItemsSource="{Binding HostFileEntries}" IsReadOnly="True" SelectionMode="Single" SelectedItem="{Binding SelectedHostFileEntry, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False">
+                <DataGrid DockPanel.Dock="Top" ItemsSource="{Binding HostFileEntries}" SelectionMode="Single" SelectedItem="{Binding SelectedHostFileEntry, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False">
                     <DataGrid.Columns>
-                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}"/>
-                        <DataGridTextColumn Header="IP Address" Binding="{Binding IPAddress}"/>
-                        <DataGridTextColumn Header="Domain" Binding="{Binding Domain}"/>
+                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="60"/>
+                        <DataGridTextColumn Header="IP Address" Binding="{Binding IPString}" Width="120"/>
+                        <DataGridTextColumn Header="Domain" Binding="{Binding Domain}" Width="*"/>
+                        <DataGridTemplateColumn Header="Delete" Width="60">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button CommandParameter="{Binding Domain}" Command="{Binding DataContext.Delete, ElementName=Wrapper, Mode=OneWay}" Content="X" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
             </DockPanel>
-            <GroupBox DockPanel.Dock="Left" Header="Details">
-                <StackPanel>
-                    <TextBlock Text="Is Active"/>
-                    <CheckBox IsChecked="{Binding SelectedHostFileEntry.IsActive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
-                    <TextBlock Text="IP Address"/>
-                    <TextBox Text="{Binding SelectedHostFileEntry.IPString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
-
-                    <TextBlock Text="Domain"/>
-                    <TextBox Text="{Binding SelectedHostFileEntry.Domain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
-                    <Button Content="Delete" x:Name="btnRemEntry" Click="BtnRemEntry_Click" Width="200" Margin="20"/>
-                </StackPanel>
-            </GroupBox>
         </DockPanel>
         <DockPanel Grid.Row="2">
             <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="{Binding StatusMessage}" />
