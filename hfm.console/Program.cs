@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 
-namespace hfm
+namespace hfm.console
 {
     class Program
     {
@@ -27,10 +27,10 @@ namespace hfm
 
             if (args != null && args.Any() && args[0]?.ToLower() == "gui")
             {
-                if(guiPath == null)
+                if (guiPath == null)
                 {
                     var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configFile);
-                    if(File.Exists(configPath))
+                    if (File.Exists(configPath))
                     {
                         var json = File.ReadAllText(configPath);
                         var obj = Newtonsoft.Json.Linq.JObject.Parse(json);

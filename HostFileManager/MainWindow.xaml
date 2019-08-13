@@ -23,7 +23,9 @@
             <DockPanel DockPanel.Dock="Left">
                 <Button DockPanel.Dock="Top" Content="Add Entry" x:Name="btnAddEntry" Click="BtnAddEntry_Click"/>
                 <Button DockPanel.Dock="Bottom" Content="Write" x:Name="btnWrite" Click="BtnWrite_Click"/>
-                <DataGrid DockPanel.Dock="Top" ItemsSource="{Binding HostFileEntries}" SelectionMode="Single" SelectedItem="{Binding SelectedHostFileEntry, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False">
+                <DataGrid DockPanel.Dock="Top" ItemsSource="{Binding HostFileEntries}"
+                          SelectionMode="Single" SelectedItem="{Binding SelectedHostFileEntry, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          AutoGenerateColumns="False" CanUserAddRows="False">
                     <DataGrid.Columns>
                         <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="60"/>
                         <DataGridTextColumn Header="IP Address" Binding="{Binding IPString}" Width="120"/>
